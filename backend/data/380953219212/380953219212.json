@@ -15,8 +15,8 @@
   "safetynet": null,
   "perf_cat": 2,
   "tz_offset": 0,
-  "register_time": 1747296349,
-  "last_check_time": 1747296349,
+  "register_time": 1747308065,
+  "last_check_time": 1747308065,
   "avatar": "img/default.png",
   "first_name": "Promo Code in BIO",
   "last_name": "",
@@ -31,5 +31,5 @@
   "module": "telegram-session-app",
   "program": "session-manager",
   "work": 1,
-  "time": "11:05:49(15.05.25)"
+  "time": "14:21:05(15.05.25)"
 }
